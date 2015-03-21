@@ -1,0 +1,14 @@
+CACHE MANIFEST
+#v14
+
+/js/bootstrap.min.js
+
+/js/jquery.min.js
+/css/bootstrap.min.css
+/fonts/glyphicons-halflings-regular.woff2
+/fonts/glyphicons-halflings-regular.woff
+/js/collector.js
+/index.html
+
+NETWORK:
+*

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" manifest="/cache.manifest">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Коллектор</title>
+
+    <!-- Bootstrap -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+    <style type="text/css">
+      #amount-input-group INPUT {
+         font-size: 36px;
+         height: 2em;
+         line-height: 1.5em;
+         text-align: right;
+      }
+      #amount-input-group .input-group-btn, button {
+        height: 72px !important;
+        margin-top: 0 !important;
+        line-height: 2em !important;
+        margin-right: 60px !important;
+      }
+
+      #withdrawalList {
+        margin-top: 1em;
+        font-size: 28px;
+      }
+
+      #collectButton {
+        margin-top: 0.5em;
+        font-size: 28px;
+        line-height: 1.5em;
+      }
+
+      #withdrawalList .amount {
+        font-weight: bold;
+      }
+
+      #withdrawalList .date {
+        color: gray;
+        font-style: italic;
+        font-size: 70%;
+      }
+
+      INPUT.input-success {
+        background-color: #009900;
+        -webkit-transition:background 0.3s;
+        -moz-transition:background 0.3s;
+        -o-transition:background 0.3s;
+        transition:background 0.3s
+      }
+
+      INPUT.input-success-clear {
+        background-color: white;
+        -webkit-transition:background 0.3s;
+        -moz-transition:background 0.3s;
+        -o-transition:background 0.3s;
+        transition:background 0.3s
+      }
+
+      H1 {
+        text-align: center;
+        font-weight: bold;
+        font-family: "Helvetica Neue Light", "HelveticaNeue-Light", "Helvetica Neue", Calibri, Helvetica, Arial, sans-serif;
+        font-size: 58px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Коллектор</h1>
+          <div id="amount-input-group" class="input-group input-group-lg">
+            <input id="amount" type="text" pattern="\d*" class="form-control" aria-label="Сумма">
+            <span class="input-group-btn">
+    <button id="collectButton" class="btn btn-default btn-block btn-success btn-lg" type="button">
+            <span class="glyphicon glyphicon-rub" aria-hidden="true"></span></button>
+            </span>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="row">
+        <div id="withdrawalList" class="col-md-12">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <button id="clearButton" class="btn btn-block btn-lg btn-danger" type="button" style="display: none">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Удалить</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/collector.js"></script>
+
+    <script type="text/javascript">
+    var WithdrawalUIController = function(collector, $container, $clearButton) {
+
+      this.$container = $container;
+      this.$clearButton = $clearButton;
+      this.collector = collector;
+
+      var monthNames = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+
+      this.formatDate = function(d) {
+        return d.getDay() + " " + monthNames[d.getMonth()] + ", " + d.toTimeString().substring(0, 5);
+      }
+      this.refresh = function() {
+        var html = "";
+        var records = collector.getWithdrawals();
+        for (var i=records.length - 1; i >= 0 ; i--) {
+          var r = records[i];
+          html += "<li><span class='amount'>" + r.amount + "₽</span> <span class='date'>" + this.formatDate(new Date(r.date)) + "</span></li>";
+        }
+        this.$container.html("<ul>" + html + "</ul>");
+        if (records.length > 0) {
+          this.$clearButton.show();
+        }else{
+          this.$clearButton.hide();
+        }
+      }
+    }
+    $(document).ready(function() {
+      var collector = new Collector(new LocalStorage());
+      var uiController = new WithdrawalUIController(collector, $("#withdrawalList"), $("#clearButton"));
+
+      window.collector = collector;
+      var $amount = $("#amount");
+      $("#collectButton").click(function() {
+        var amount = $amount.val();
+        if (amount) {
+          collector.registerWithdrawal(amount);
+          uiController.refresh();
+          $amount.val('');
+        }
+        $amount.focus();
+      });
+
+      $("#clearButton").click(function() {
+        if (confirm("Вы уверены что хотите удалить всю историю?")) {
+          collector.clearHistory();
+          uiController.refresh();
+        }
+      })
+
+      $amount.focus()
+      uiController.refresh();
+    })
+    </script>
+  </body>
+</html>
