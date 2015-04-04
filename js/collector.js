@@ -24,7 +24,6 @@ var Collector = function(storage) {
 		this.records.push(entry);
 		var idx = this.count();
 
-
 		var _collector = this;
 		var opts = {
 			enableHighAccuracy: false,
@@ -32,7 +31,10 @@ var Collector = function(storage) {
 			maximumAge: 3000000
 		};
 		navigator.geolocation.getCurrentPosition(function(geo) {
-			_collector.getWithdrawal(idx).geo = geo;
+			entry.geo = {
+				latitude: geo.coords.latitude,
+				longitude: geo.coords.longitude,
+			};
 			_collector.updateStorage();
 			if (geoCallback)
 				geoCallback(geo);
@@ -51,7 +53,10 @@ var Collector = function(storage) {
 	}
 
 	this.getWithdrawal = function(idx) {
-		return this.records[idx - 1];
+		if (idx <= this.records.length)
+			return this.records[idx - 1];
+		else
+			throw new RangeError("Invalid withdrawal id: " + idx);
 	}
 
 	this.getWithdrawals = function() {
@@ -78,10 +83,10 @@ var MemStorage = function() {
 	this.data = {};
 
 	this.set = function(k, v) {
-		this.data.k = v;
+		this.data[k] = JSON.stringify(v);
 	}
 
 	this.get = function(k) {
-		return this.data[k];
+		return this.data[k] ? JSON.parse(this.data[k]) : null;
 	}
 }

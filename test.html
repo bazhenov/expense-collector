@@ -46,11 +46,26 @@
   		var idx = collector.registerWithdrawal(100, function() {
   			var entry = collector.getWithdrawal(idx);
   			assert.ok(entry.geo != null, "Отсутствует геоинформация");
-  			assert.ok(entry.geo.coords.latitude > 0, "Отсутствует геоинформация");
-  			assert.ok(entry.geo.coords.longitude > 0, "Отсутствует геоинформация");
+  			assert.ok(entry.geo.latitude > 0, "Отсутствует геоинформация");
+  			assert.ok(entry.geo.longitude > 0, "Отсутствует геоинформация");
   			done();
   		});
 		});
+
+    QUnit.test("Координаты должны быть сериализуемы", function( assert ) {
+      assert.expect(2)
+
+      var done = assert.async();
+      var storage = new MemStorage();
+      var collector = new Collector(storage);
+      var idx = collector.registerWithdrawal(100, function() {
+        var newCollector = new Collector(storage);
+        var entry = newCollector.getWithdrawal(idx);
+        assert.ok(entry.geo.latitude > 0, "Отсутствует геоинформация");
+        assert.ok(entry.geo.longitude > 0, "Отсутствует геоинформация");
+        done();
+      });
+    });
   </script>
 </body>
 </html>

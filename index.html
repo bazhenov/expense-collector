@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" manifest="/cache.manifest">
+<!--manifest="/cache.manifest"-->
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/icon.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon.png">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>Коллектор</title>
 
@@ -40,11 +45,40 @@
         font-weight: bold;
       }
 
-      #withdrawalList .date {
+      #withdrawalList .time {
         color: gray;
-        font-style: italic;
-        font-size: 70%;
+        font-family: monospace;
+        font-size: 50%;
+
       }
+
+      #withdrawalList {
+        padding: 0
+      }
+
+      #withdrawalList LI.date {
+        list-style-type: none;
+        margin-left: 0;
+        padding-left: 0;
+        color: #666;
+        font-weight: bold;
+      }
+
+      #withdrawalList LI.date .glyphicon {
+        margin-right: 0.5em;
+      }
+
+      #withdrawalList LI {
+        list-style-type: none;
+        margin-left: 30px;
+      }
+
+      #withdrawalList LI .glyphicon-map-marker {
+        font-size: 80%;
+        color: #ff9900
+      }
+
+      
 
       INPUT.input-success {
         background-color: #009900;
@@ -113,14 +147,29 @@
       var monthNames = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 
       this.formatDate = function(d) {
-        return d.getDay() + " " + monthNames[d.getMonth()] + ", " + d.toTimeString().substring(0, 5);
+        return d.getDate() + " " + monthNames[d.getMonth()];
       }
+      this.formatTime = function(d) {
+        return d.toTimeString().substring(0, 5);
+      }
+
       this.refresh = function() {
         var html = "";
         var records = collector.getWithdrawals();
+        var previousDate = "";
         for (var i=records.length - 1; i >= 0 ; i--) {
           var r = records[i];
-          html += "<li><span class='amount'>" + r.amount + "₽</span> <span class='date'>" + this.formatDate(new Date(r.date)) + "</span></li>";
+          var date = new Date(r.date);
+          var formattedDate = this.formatDate(date);
+          if (formattedDate != previousDate) {
+            html += "<li class='date'><span class='glyphicon glyphicon-calendar' aria-hidden='true'></span>" + this.formatDate(date) + "</li>";
+            previousDate = formattedDate;
+          }
+          var geoMarker = (r.geo != null)
+            ? "<a href='comgooglemaps://?center=" + r.geo.latitude + "," + r.geo.longitude + "&zoom=16'>" +
+                "<span class='glyphicon glyphicon-map-marker' aria-hidden='true'></span></a>"
+            : "";
+          html += "<li><span class='time'>" + this.formatTime(date) + "</span> <span class='amount'>" + r.amount + "₽</span> " + geoMarker + "</li>";
         }
         this.$container.html("<ul>" + html + "</ul>");
         if (records.length > 0) {
@@ -139,7 +188,9 @@
       $("#collectButton").click(function() {
         var amount = $amount.val();
         if (amount) {
-          collector.registerWithdrawal(amount);
+          collector.registerWithdrawal(amount, function() {
+            uiController.refresh();
+          });
           uiController.refresh();
           $amount.val('');
         }
